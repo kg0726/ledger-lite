@@ -1,6 +1,7 @@
 package com.kjm.ledger_lite.controller;
 
 import com.kjm.ledger_lite.controller.dto.ApiErrorResponse;
+import com.kjm.ledger_lite.exceiption.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,6 +75,24 @@ public class GlobalExceptionHandler {
                 status.value(),
                 status.getReasonPhrase(),
                 "Invalid request body (JSON parse failed)",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(status).body(body);
+    }
+
+    // 4. 존재하지 않는 리소스(404) 처리
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handelNotFound(
+            ResourceNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                LocalDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                ex.getMessage(),
                 request.getRequestURI()
         );
         return ResponseEntity.status(status).body(body);
