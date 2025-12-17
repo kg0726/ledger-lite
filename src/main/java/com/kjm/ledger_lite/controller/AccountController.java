@@ -53,6 +53,7 @@ public class AccountController {
     public void create(@Valid @RequestBody AccountCreateRequest req) {
 
         // 비즈니스 룰: 계정과목 코드는 중복되면 안 된다.
+        // isPresent()로 객체 존재여부를 확인
         if (accountRepository.findByCode(req.code()).isPresent()) {
             // 지금은 단순 예외로 처리(나중에 400으로 예쁘게 내려주도록 개선할 예정)
             throw new IllegalArgumentException("Account code already exists: " + req.code());
