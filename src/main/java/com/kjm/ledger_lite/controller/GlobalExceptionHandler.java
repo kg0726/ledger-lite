@@ -3,11 +3,13 @@ package com.kjm.ledger_lite.controller;
 import com.kjm.ledger_lite.controller.dto.ApiErrorResponse;
 import com.kjm.ledger_lite.exceiption.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
@@ -96,5 +98,20 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(status).body(body);
+    }
+
+    // 5. 계정과목 중복시 409 처리
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT) // ✅ 409
+    public ApiErrorResponse handleDataIntegrityViolation(DataIntegrityViolationException e,
+                                                         HttpServletRequest request) {
+        // ✅ 중복 키/유니크 위반이 대부분이라 사용자 메시지를 통일
+        return new ApiErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                "Already exists (unique constraint violated)",
+                request.getRequestURI()
+        );
     }
 }
