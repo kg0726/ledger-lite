@@ -2,6 +2,7 @@ package com.kjm.ledger_lite.controller;
 
 import com.kjm.ledger_lite.controller.dto.JournalEntryCreateRequest;
 import com.kjm.ledger_lite.controller.dto.JournalEntryCreateResponse;
+import com.kjm.ledger_lite.controller.dto.JournalEntryDetailResponse;
 import com.kjm.ledger_lite.service.JournalEntryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -41,5 +42,14 @@ public class JournalEntryController {
         Long id =  journalEntryService.create(req);
         // DTO를 통해 JSON 객체 형태로 변환하여 응답
         return new JournalEntryCreateResponse(id);
+    }
+
+    /**
+     * GET /api/journal-entries/{id}
+     * 특정 id의 전표를 상세조회
+     */
+    @GetMapping("/{id}")
+    public JournalEntryDetailResponse get(@PathVariable Long id) {
+        return journalEntryService.get(id);
     }
 }

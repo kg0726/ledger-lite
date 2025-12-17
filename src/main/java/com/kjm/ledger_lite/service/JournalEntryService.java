@@ -1,13 +1,17 @@
 package com.kjm.ledger_lite.service;
 
 import com.kjm.ledger_lite.controller.dto.JournalEntryCreateRequest;
+import com.kjm.ledger_lite.controller.dto.JournalEntryDetailResponse;
 import com.kjm.ledger_lite.domain.Account;
 import com.kjm.ledger_lite.domain.JournalEntry;
 import com.kjm.ledger_lite.domain.JournalLine;
+import com.kjm.ledger_lite.exceiption.ResourceNotFoundException;
 import com.kjm.ledger_lite.repository.AccountRepository;
 import com.kjm.ledger_lite.repository.JournalEntryRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * 회계 규칙(차변합 = 대변합) 같은 비즈니스 로직을 Controller 밖으로 분리
@@ -56,7 +60,7 @@ public class JournalEntryService {
         for (JournalEntryCreateRequest.Line line: req.lines()) {
             // accountId로 계정과목 조회
             Account account = accountRepository.findById(line.accountId())
-                    .orElseThrow(() -> new IllegalArgumentException("Account not found: " + line.accountId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + line.accountId()));
 
             JournalLine journalLine = new JournalLine(line.dcType(), line.amount(), account);
             // 전표에 분개 라인 추가
@@ -67,5 +71,41 @@ public class JournalEntryService {
         // 생성된 전표 id 반환
 
         return saved.getId();
+    }
+
+    /**
+     * 전표 단건 조회
+     * 1. findById로 전표 조회
+     * 없으면 전역 핸들러가 404 반환
+     * 있으면 DTO로 변환하여 응답
+     */
+    @Transactional(readOnly = true)
+    public JournalEntryDetailResponse get(Long id) {
+        // 조회 할 전표 할당
+        JournalEntry entry = journalEntryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("JournalEntry not found: " + id));
+        // 엔티티 -> DTO 변환
+        List<JournalEntryDetailResponse.Line> lines = entry.getLines().stream()
+                .map(this::toLineDto)
+                .toList();
+
+        return new JournalEntryDetailResponse(
+                entry.getId(),
+                entry.getEntryDate(),
+                entry.getDescription(),
+                lines
+        );
+    }
+    /**
+     * JournalLine 엔티티를 Line DTO로 변환하는 메서드
+     */
+    private JournalEntryDetailResponse.Line toLineDto(JournalLine line) {
+        return new JournalEntryDetailResponse.Line(
+                line.getDcType(),
+                line.getAmount(),
+                line.getAccount().getId(),
+                line.getAccount().getCode(),
+                line.getAccount().getName()
+        );
     }
 }
