@@ -88,6 +88,11 @@ public class JournalEntry {
         line.setJournalEntry(this); // JournalLine에 전표를 연결(외래키 역할)
     }
 
+    // 적요 변경 메서드
+    public void changeDescription(String description) {
+        this.description = description;
+    }
+
     // ===== Getter =====
     public Long getId() { return id; }
     public String getEntryDate() { return entryDate; }

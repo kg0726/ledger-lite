@@ -1,12 +1,12 @@
 package com.kjm.ledger_lite.controller;
 
-import com.kjm.ledger_lite.controller.dto.JournalEntryCreateRequest;
-import com.kjm.ledger_lite.controller.dto.JournalEntryCreateResponse;
-import com.kjm.ledger_lite.controller.dto.JournalEntryDetailResponse;
+import com.kjm.ledger_lite.controller.dto.*;
 import com.kjm.ledger_lite.service.JournalEntryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * JournalEntryController
@@ -51,5 +51,25 @@ public class JournalEntryController {
     @GetMapping("/{id}")
     public JournalEntryDetailResponse get(@PathVariable Long id) {
         return journalEntryService.get(id);
+    }
+
+    /**
+     * 전표 목록 조회
+     * GET /api/journal-entries
+     */
+    @GetMapping
+    public List<JournalEntrySummaryResponse> list() {
+        return journalEntryService.listSummaries();
+    }
+
+    /**
+     * id를 routing
+     */
+    @PatchMapping("/{id}")
+    public JournalEntryDetailResponse updateDescription(
+            @PathVariable Long id,
+            @Valid @RequestBody JournalEntryUpdateRequest req
+            ) {
+        return journalEntryService.updateDescription(id, req);
     }
 }

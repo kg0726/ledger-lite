@@ -3,6 +3,7 @@ package com.kjm.ledger_lite.service;
 import com.kjm.ledger_lite.controller.dto.AccountCreateRequest;
 import com.kjm.ledger_lite.domain.Account;
 import com.kjm.ledger_lite.repository.AccountRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,7 @@ public class AccountService {
     public void create(AccountCreateRequest req) {
         // 계정과목 코드는 중복될 수 없음
         if (accountRepository.findByCode(req.code()).isPresent()) {
-            throw new IllegalArgumentException("Account code already exists: " + req.code());
+            throw new DataIntegrityViolationException("Account code already exists: " + req.code());
         }
 
         Account account = new Account(req.code(), req.name());

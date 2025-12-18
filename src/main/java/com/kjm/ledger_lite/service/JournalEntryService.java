@@ -2,6 +2,8 @@ package com.kjm.ledger_lite.service;
 
 import com.kjm.ledger_lite.controller.dto.JournalEntryCreateRequest;
 import com.kjm.ledger_lite.controller.dto.JournalEntryDetailResponse;
+import com.kjm.ledger_lite.controller.dto.JournalEntrySummaryResponse;
+import com.kjm.ledger_lite.controller.dto.JournalEntryUpdateRequest;
 import com.kjm.ledger_lite.domain.Account;
 import com.kjm.ledger_lite.domain.JournalEntry;
 import com.kjm.ledger_lite.domain.JournalLine;
@@ -11,6 +13,8 @@ import com.kjm.ledger_lite.repository.JournalEntryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -106,6 +110,74 @@ public class JournalEntryService {
                 line.getAccount().getId(),
                 line.getAccount().getCode(),
                 line.getAccount().getName()
+        );
+    }
+
+    /**
+     * 전표 목록 (요약)조회
+     * 
+     * Controller에서 이 메서드 호출
+     * Repository가 전표 + 라인 + 계정까지 fetch join을 통해 가져옴
+     * Service가 각 전표의 라인을 순회하며 차/대 합계를 계산
+     * Summary DTO 리스트를 만들어 반환
+     */
+    @Transactional(readOnly = true)
+    public List<JournalEntrySummaryResponse> listSummaries() {
+        // 1. 전표 목록을 DB에서 조회
+        List<JournalEntry> entries =
+                journalEntryRepository.findAllWithLinesAndAccountOrderByEntryDateDesc();
+        // 2. 엔티티 -> 요약 DTO로 변환
+        List<JournalEntrySummaryResponse> result = new ArrayList<>();
+
+        for (JournalEntry je : entries) {
+            long debitTotal = 0L;
+            long creditTotal = 0L;
+
+            // 라인들을 순회하며 차/대 합계 계산
+            for (JournalLine line : je.getLines()) {
+                if ("DEBIT".equals(line.getDcType())) {
+                    debitTotal += line.getAmount();
+                } else if ("CREDIT".equals(line.getDcType())) {
+                    creditTotal += line.getAmount();
+                }
+            }
+            // LocalData 형식으로 변환
+            LocalDate entryDate = LocalDate.parse(je.getEntryDate());
+            result.add(new JournalEntrySummaryResponse(
+                    je.getId(),
+                    entryDate,
+                    je.getDescription(),
+                    debitTotal,
+                    creditTotal
+            ));
+        }
+        return result;
+    }
+
+    /**
+     * 전표 적요 수정
+     * Controller가 id, req를 받아 Service 호출
+     * Service가 전표 조회
+     * 엔티티의 description 변경
+     * 트랜잭션 커밋 시점에 JPA Dirty Checking으로 UPDATE 반영
+     * 수정된 전표를 Detail DTO로 만들어 반환
+     */
+    @Transactional
+    public JournalEntryDetailResponse updateDescription(Long id, JournalEntryUpdateRequest req) {
+        // 수정할 대상 전표 조회
+        JournalEntry entry = journalEntryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("JournalEntry not found"));
+        // 엔티티 상태 변경(Dirty Check 대상)
+        entry.changeDescription(req.description());
+        // 수정된 엔티티 -> DTO 변환
+        List<JournalEntryDetailResponse.Line> lines = entry.getLines().stream()
+                .map(this::toLineDto)
+                .toList();
+        return new JournalEntryDetailResponse(
+                entry.getId(),
+                entry.getEntryDate(),
+                entry.getDescription(),
+                lines
         );
     }
 }
