@@ -95,6 +95,22 @@
 
 - 검증 범위: Controller → Service(@Transactional) → Repository(JPA) → H2 DB
 
+[전체 테스트 결과] <br>
+
+<img width="563" height="90" alt="gradle-test-success png" src="https://github.com/user-attachments/assets/e64cd52b-675f-4a88-b7be-ae7907a306a0" /> <br>
+
+[전체 테스트 결과 요약] <br>
+
+<img width="3087" height="1084" alt="test-report-summary png" src="https://github.com/user-attachments/assets/662629bb-886f-45cd-9aea-e718cc99297a" /> <br>
+
+[Account 테스트 결과] <br>
+
+<img width="3006" height="1123" alt="test-report-account png" src="https://github.com/user-attachments/assets/80153a6e-96fd-4d63-8b5f-2ab7dc560113" /> <br>
+
+[JounalEntry 테스트 결과] <br>
+
+<img width="3802" height="1344" alt="test-report-journal-entry png" src="https://github.com/user-attachments/assets/3d8a07e1-39ed-45bf-b2ed-2a48f91e5c6e" /> <br>
+
 ---
 
 ## Future Plans
