@@ -223,7 +223,7 @@ class JournalEntryControllerTest {
                         .content(patchBody))
                 .andExpect(status().is2xxSuccessful());
 
-        // ✅ 3) GET으로 다시 조회해서 description이 바뀌었는지 “결과”를 검증
+        // ✅ 3) GET으로 다시 조회해서 description이 바뀌었는지 “결과”를 검증함
         mockMvc.perform(get("/api/journal-entries/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
