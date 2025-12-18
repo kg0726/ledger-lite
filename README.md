@@ -19,7 +19,7 @@
 - **전표(Journal Entry)**
   - 생성: **차변합 = 대변합** 규칙을 Service 레이어에서 검증 후 저장 (불일치 시 400)
   - 단건 조회: 라인 + 계정과목(code/name)까지 포함해 반환(DTO)
-  - 목록 조회: 전표+라인+계정과목을 한 번에 조회하도록 구성해(N+1 이슈를 피하는 방향) 요약 DTO로 반환
+  - 목록 조회: 전표+라인+계정과목을 fetch join으로 한 번에 조회해 N+1 이슈를 회피하고, 요약 DTO로 반환
   - 수정(Update): 전표 적요(description)만 부분 변경(PATCH) + 테스트로 검증
 - **표준 에러 응답(JSON)**
   - 400/404/409를 상황에 맞게 반환하고, 동일한 포맷으로 응답
@@ -60,8 +60,8 @@
 - `GET /api/journal-entries/{id}` : 전표 단건 조회(라인 + 계정과목 포함)  
   - ✅ 200 OK / ❌ 404 Not Found
 - `PATCH /api/journal-entries/{id}` : 전표 적요(description) 수정  
-  - ✅ 200 OK / ❌ 400 Bad Request / ❌ 404 Not Found  
-  - PATCH는 전표의 “일부 필드(적요)”만 변경하도록 구현하였습니다.
+  - ✅ 200 OK (수정된 전표 Detail DTO 반환) / ❌ 400 Bad Request / ❌ 404 Not Found  
+  - PATCH는 전표의 일부 필드(적요)만 변경하는 요구에 맞춰 선택했습니다.
 
 ---
 
@@ -107,7 +107,7 @@
 
 <img width="3006" height="1123" alt="test-report-account png" src="https://github.com/user-attachments/assets/80153a6e-96fd-4d63-8b5f-2ab7dc560113" /> <br>
 
-[JounalEntry 테스트 결과] <br>
+[JournalEntry 테스트 결과] <br>
 
 <img width="3802" height="1344" alt="test-report-journal-entry png" src="https://github.com/user-attachments/assets/3d8a07e1-39ed-45bf-b2ed-2a48f91e5c6e" /> <br>
 
@@ -129,9 +129,7 @@
 
 - Spring 요청 흐름(DispatcherServlet → Controller → Service → Repository → DB)을 기능 단위로 경험하였습니다.
 
-- 도메인 규칙(차/대 합계 일치, 존재하지 않는 계정 처리 등)을 Service 레이어에서 
-  
-  검증하였습니다.
+- 도메인 규칙(차/대 합계 일치, 존재하지 않는 계정 처리 등)을 Service 레이어에서 검증하였습니다.
 
 - 예외를 상태코드(400/404/409)로 분리하고, 표준 JSON 응답으로 통일하였습니다.
 
